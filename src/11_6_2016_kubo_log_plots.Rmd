@@ -46,13 +46,17 @@ library(cowplot)
 ### VND7 AND DOWNSTEAM TARGETS
 
 
-a =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT3G08500)) + geom_line() + labs(title = "VND7 vs MYB83")
-b =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT5G12870)) + geom_line() + labs(title = "VND7 vs MYB46")
-c =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT5G67210)) + geom_line() + labs(title = "VND7 vs IRX15-L")
-d =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT4G18780)) + geom_line() + labs(title = "VND7 vs CESA8")
-e =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT5G03260)) + geom_line() + labs(title = "VND7 vs LAC11")
+a =ggplot(data=FFL_t, aes(y=AT3G08500,x=AT1G71930)) + geom_point() + labs(title = "VND7 vs MYB83")
+b =ggplot(data=FFL_t, aes(y=AT5G12870,x=AT1G71930)) + geom_point() + labs(title = "VND7 vs MYB46")
+c =ggplot(data=FFL_t, aes(y=AT5G67210,x=AT1G71930)) + geom_point() + labs(title = "VND7 vs IRX15-L")
+d =ggplot(data=FFL_t, aes(y=AT4G18780,x=AT1G71930)) + geom_point() + labs(title = "VND7 vs CESA8")
+e =ggplot(data=FFL_t, aes(y=AT5G03260,x=AT1G71930)) + geom_point() + labs(title = "VND7 vs LAC11")
+f =ggplot(data=FFL_t, aes(y=AT3G18780,x=AT1G71930)) + geom_point() + labs(title = "VND7 vs ACT2")
 
-plot_grid(a, b, c, d,e, ncol = 3)
+plot_grid(a, b, c, d,e,f, ncol = 3)
+
+```
+```{r}
 
 
 ### VND6 AND DOWNSTREAM TARGETS
@@ -87,20 +91,20 @@ row.names(upstream_VND7) <- upstream_VND7$locus
 upstream_VND7_t <- t(upstream_VND7[3:14])
 upstream_VND7_t <- data.frame(upstream_VND7_t)
 
-a = ggplot(data=FFL_t, aes(y=AT1G71930,x=AT5G62380)) + geom_line() + labs(title = "VND7 vs VND6")
-b = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT4G32800)) + geom_line() + labs(title = "VND7 vs AT4G32800")
-c = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT1G76880)) + geom_line() + labs(title = "VND7 vs AT1G76880")
-d = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT2G44730)) + geom_line() + labs(title = "VND7 vs AT2G44730")
-e = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT1G68360)) + geom_line() + labs(title = "VND7 vs AT1G68360")
-f = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT1G04880)) + geom_line() + labs(title = "VND7 vs AT1G04880")
-g = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT1G47870)) + geom_line() + labs(title = "VND7 vs AT1G47870")
-h = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT3G18780)) + geom_point() + labs(title = "VND7 vs actin")
-#i = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT5G62020)) + geom_line() + labs(title = "VND7 vs AT5G62020")
-j = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT3G06740)) + geom_line() + labs(title = "VND7 vs AT3G06740")
-k = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT1G52880)) + geom_line() + labs(title = "VND7 vs AT1G52880")
+a = ggplot(data=FFL_t, aes(y=AT5G62380,x=AT5G62380)) + geom_line() + labs(title = "VND7 vs VND6")
+b = ggplot(data=upstream_VND7_t, aes(y=AT4G32800,x=AT1G71930)) + geom_line() + labs(title = "VND7 vs AT4G32800")
+c = ggplot(data=upstream_VND7_t, aes(y=AT1G76880,x=AT1G71930)) + geom_line() + labs(title = "VND7 vs AT1G76880")
+d = ggplot(data=upstream_VND7_t, aes(y=AT2G44730,x=AT1G71930)) + geom_line() + labs(title = "VND7 vs AT2G44730")
+e = ggplot(data=upstream_VND7_t, aes(y=AT1G68360,x=AT1G71930)) + geom_line() + labs(title = "VND7 vs AT1G68360")
+f = ggplot(data=upstream_VND7_t, aes(y=AT1G04880,x=AT1G71930)) + geom_line() + labs(title = "VND7 vs AT1G04880")
+g = ggplot(data=upstream_VND7_t, aes(y=AT1G47870,x=AT1G71930)) + geom_line() + labs(title = "VND7 vs AT1G47870")
+#h = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT3G18780)) + geom_point() + labs(title = "VND7 vs actin")
+i = ggplot(data=upstream_VND7_t, aes(y=AT5G62020,x=AT1G71930)) + geom_line() + labs(title = "VND7 vs AT5G62020")
+j = ggplot(data=upstream_VND7_t, aes(y=AT3G06740,x=AT1G71930)) + geom_line() + labs(title = "VND7 vs AT3G06740")
+k = ggplot(data=upstream_VND7_t, aes(y=AT1G52880,x=AT1G71930)) + geom_line() + labs(title = "VND7 vs AT1G52880")
 
 
-plot_grid(a, c, d,e,f,g,h,j,k, ncol = 3)
+plot_grid(a, c, d,e,f,g,i,j,k, ncol = 3)
 
 
 
