@@ -1,0 +1,107 @@
+---
+title: "11_6_2016_Kubo_log_plots"
+output: html_document
+---
+
+## RMA
+before I was using MAS5 for getting the expression values as seen in line 33. I have switched from this because values are said to no be compare-able and are not log2 transformed. MAS5 was also labled as out dated compared to RMA. With MAS5 I could see that VND7 has a vary large range!
+
+```{r}
+setwd("/Users/gturco/Documents/Projects/xylem_network_expression/data/kubo/cel")
+library(affy)
+### set this to file where all cel files are located
+#unnormalized
+Data <- ReadAffy()
+boxplot(Data)
+
+
+#The used default seting of MAS5
+# normalized data
+eset <- rma(Data)
+boxplot(exprs(eset))
+
+gn <- geneNames(Data)
+
+expression_values = exprs(eset)
+```
+
+```{r}
+
+mapping <- read.csv("/Users/gturco/Documents/Projects/xylem_network_expression/data/kubo/ATH1_AGImapping.csv", header = TRUE)
+AGI_kubo <- merge(mapping[,1:2], expression_values, by.x="array_element_name", by.y="row.names")
+
+
+FFL = subset(AGI_kubo, locus == "AT5G62380" | locus == "AT1G71930" | locus == "AT5G12870" | locus == "AT3G08500" | locus == "AT5G03260" | locus == "AT4G18780" | locus == "AT5G67210" | locus == "AT3G18780"  )
+
+row.names(FFL) <- FFL$locus
+FFL_t <- t(FFL[3:14])
+FFL_t <- data.frame(FFL_t)
+```
+
+```{r}
+library(ggplot2)
+library(cowplot)
+
+
+### VND7 AND DOWNSTEAM TARGETS
+
+
+a =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT3G08500)) + geom_line() + labs(title = "VND7 vs MYB83")
+b =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT5G12870)) + geom_line() + labs(title = "VND7 vs MYB46")
+c =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT5G67210)) + geom_line() + labs(title = "VND7 vs IRX15-L")
+d =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT4G18780)) + geom_line() + labs(title = "VND7 vs CESA8")
+e =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT5G03260)) + geom_line() + labs(title = "VND7 vs LAC11")
+
+plot_grid(a, b, c, d,e, ncol = 3)
+
+
+### VND6 AND DOWNSTREAM TARGETS
+a =ggplot(data=FFL_t, aes(y=AT5G62380,x=AT3G08500)) + geom_line() + labs(title = "VND6 vs MYB83")
+b =ggplot(data=FFL_t, aes(y=AT5G62380,x=AT5G12870)) + geom_line() + labs(title = "VND6 vs MYB46")
+c =ggplot(data=FFL_t, aes(y=AT5G62380,x=AT5G67210)) + geom_line() + labs(title = "VND6 vs IRX15-L")
+d =ggplot(data=FFL_t, aes(y=AT5G62380,x=AT4G18780)) + geom_line() + labs(title = "VND6 vs CESA8")
+e =ggplot(data=FFL_t, aes(y=AT5G62380,x=AT5G03260)) + geom_line() + labs(title = "VND6 vs LAC11")
+
+plot_grid(a, b, c, d,e, ncol = 3)
+
+### MYB83 AND DOWNSTEAM TARGET
+a =ggplot(data=FFL_t, aes(y=AT3G08500,x=AT5G12870)) + geom_line() + labs(title = "MYB83 vs MYB46")
+b =ggplot(data=FFL_t, aes(y=AT3G08500,x=AT5G67210)) + geom_line() + labs(title = "MYB83 vs IRX15-L")
+c=ggplot(data=FFL_t, aes(y=AT3G08500,x=AT4G18780)) + geom_line() + labs(title = "MYB83 vs CESA8")
+d = ggplot(data=FFL_t, aes(y=AT3G08500,x=AT5G03260)) + geom_line() + labs(title = "MYB83 vs LAC11")
+
+plot_grid(a, b, c, d, ncol = 2)
+
+### MYB46 AND DOWNSTREAM TARGETS
+a= ggplot(data=FFL_t, aes(y=AT5G12870,x=AT3G08500)) + geom_line() + labs(title = "MYB46 vs MYB83")
+b= ggplot(data=FFL_t, aes(y=AT5G12870,x=AT5G67210)) + geom_line() + labs(title = "MYB83 vs IRX15-L")
+c= ggplot(data=FFL_t, aes(y=AT5G12870,x=AT4G18780)) + geom_line() + labs(title = "MYB83 vs CESA8")
+d= ggplot(data=FFL_t, aes(y=AT5G12870,x=AT5G03260)) + geom_line() + labs(title = "MYB83 vs LAC11")
+plot_grid(a, b, c, d, ncol = 2)
+
+
+### VND7 UPSTREAM TARGETS
+upstream_VND7 = subset(AGI_kubo, locus == "AT1G71930" |  locus == "AT4G32800" | locus == "AT1G76880" | locus == "AT2G44730" | locus == "AT1G68360" | locus == "AT1G04880" | locus == "AT1G47870" | locus == "	AT3G15210" | locus == "AT5G62020" | locus == "AT3G06740" | locus == "AT1G52880" | locus == "AT3G18780" )
+
+row.names(upstream_VND7) <- upstream_VND7$locus
+upstream_VND7_t <- t(upstream_VND7[3:14])
+upstream_VND7_t <- data.frame(upstream_VND7_t)
+
+a = ggplot(data=FFL_t, aes(y=AT1G71930,x=AT5G62380)) + geom_line() + labs(title = "VND7 vs VND6")
+b = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT4G32800)) + geom_line() + labs(title = "VND7 vs AT4G32800")
+c = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT1G76880)) + geom_line() + labs(title = "VND7 vs AT1G76880")
+d = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT2G44730)) + geom_line() + labs(title = "VND7 vs AT2G44730")
+e = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT1G68360)) + geom_line() + labs(title = "VND7 vs AT1G68360")
+f = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT1G04880)) + geom_line() + labs(title = "VND7 vs AT1G04880")
+g = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT1G47870)) + geom_line() + labs(title = "VND7 vs AT1G47870")
+h = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT3G18780)) + geom_point() + labs(title = "VND7 vs actin")
+#i = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT5G62020)) + geom_line() + labs(title = "VND7 vs AT5G62020")
+j = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT3G06740)) + geom_line() + labs(title = "VND7 vs AT3G06740")
+k = ggplot(data=upstream_VND7_t, aes(y=AT1G71930,x=AT1G52880)) + geom_line() + labs(title = "VND7 vs AT1G52880")
+
+
+plot_grid(a, c, d,e,f,g,h,j,k, ncol = 3)
+
+
+
+```

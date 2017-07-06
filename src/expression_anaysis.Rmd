@@ -1,0 +1,177 @@
+---
+title: "microarray"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+install packages
+```{r}
+source("http://bioconductor.org/biocLite.R")
+biocLite("limma")
+biocLite("affy")
+
+```
+
+## Microarray anaysis MAS5
+
+```{r}
+library(affy)
+### set this to file where all cel files are located
+setwd("/Users/gturco/proj/xylem_network_expression/data/kubo/cel")
+#unnormalized
+Data <- ReadAffy()
+boxplot(Data)
+
+
+#The used default seting of MAS5
+# normalized data
+eset <- mas5(Data)
+boxplot(exprs(eset))
+
+#gn <- mas5calls(Data)
+gn <- geneNames(Data)
+#pm(Data, gn[100])
+
+expression_values = exprs(eset)
+
+```
+
+## Match data with AGI
+```{r}
+names <- rownames(expression_values)
+rownames(expression_values) <- NULL
+expression_values_df <-  data <- cbind(names,expression_values)
+
+
+
+mapping <- read.csv("/Users/gturco/proj/xylem_network_expression/data/kubo/ATH1_AGImapping.csv", header = TRUE)
+AGI_kubo <- merge(mapping[,1:2], expression_values_df, by.x="array_element_name", by.y="names")
+
+library(reshape2)
+AGI_kubo_short <- melt(AGI_kubo,id = c("locus","array_element_name"))
+
+
+AGI_kubo_short$variable = factor(AGI_kubo_short$variable, levels = c("0A.cel","0B.cel","2A.cel","2B.cel","4A.cel", "4B.cel","6A.cel","6B.cel","8A.cel","8B.cel","10A.cel","10B.cel"))
+
+AGI_kubo_short$value = as.numeric(as.character(AGI_kubo_short$value))
+
+### VND6
+VND6 = subset(AGI_kubo_short, locus == "AT5G62380")
+### VND7
+VND7 = subset(AGI_kubo_short, locus == "AT1G71930")
+### MYB46
+MYB46 = subset(AGI_kubo_short, locus == "AT5G12870")
+### MYB83
+MYB83 = subset(AGI_kubo_short, locus == "AT3G08500")
+### Lac11
+LAC11 = subset(AGI_kubo_short, locus == "AT5G03260")
+### CESA8
+CESA8 = subset(AGI_kubo_short, locus == "AT4G18780")
+### IRX15-L
+IRX15 = subset(AGI_kubo_short, locus == "AT5G67210")
+```
+
+## Plots
+```{r}
+library(ggplot2)
+
+VND7$variable = factor(VND7$variable, levels = c("0A.cel","0B.cel","2A.cel","2B.cel","4A.cel", "4B.cel","6A.cel","6B.cel","8A.cel","8B.cel","10A.cel","10B.cel"))
+
+ggplot(data=VND7, aes(y=value,x=variable,color=locus)) + geom_line(group = 1 ) 
+ggplot(data=VND6, aes(y=value,x=variable,color=locus)) + geom_line(group = 1 )
+
+ggplot(data=MYB46, aes(y=value,x=variable,color=locus)) + geom_line(group = 1 )
+ggplot(data=MYB83, aes(y=value,x=variable,color=locus)) + geom_line(group = 1 )
+
+
+ggplot(data=IRX15, aes(y=value,x=variable,color=locus)) + geom_line(group = 1 )
+ggplot(data=LAC11, aes(y=value,x=variable,color=locus)) + geom_line(group = 1 )
+ggplot(data=CESA8, aes(y=value,x=variable,color=locus)) + geom_line(group = 1 )
+
+```
+
+## RMA
+before I was using MAS5 for getting the expression values as seen in line 33. I have switched from this because values are said to no be compare-able and are not log2 transformed. MAS5 was also labled as out dated compared to RMA. With MAS5 I could see that VND7 has a vary large range!
+
+```{r}
+library(affy)
+### set this to file where all cel files are located
+setwd("/Users/gturco/proj/xylem_network_expression/data/kubo/cel")
+#unnormalized
+Data <- ReadAffy()
+boxplot(Data)
+
+
+#The used default seting of MAS5
+# normalized data
+eset <- rma(Data)
+boxplot(exprs(eset))
+
+gn <- geneNames(Data)
+
+expression_values = exprs(eset)
+```
+
+```{r}
+
+mapping <- read.csv("/Users/gturco/proj/xylem_network_expression/data/kubo/ATH1_AGImapping.csv", header = TRUE)
+AGI_kubo <- merge(mapping[,1:2], expression_values, by.x="array_element_name", by.y="row.names")
+
+
+FFL = subset(AGI_kubo, locus == "AT5G62380" | locus == "AT1G71930" | locus == "AT5G12870" | locus == "AT3G08500" | locus == "AT5G03260" | locus == "AT4G18780" | locus == "AT5G67210" )
+
+row.names(FFL) <- FFL$locus
+FFL_t <- t(FFL[3:14])
+FFL_t <- data.frame(FFL_t)
+```
+
+```{r}
+library(ggplot2)
+library(cowplot)
+
+
+### VND7 AND DOWNSTEAM TARGETS
+
+
+a =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT3G08500)) + geom_line() + labs(title = "VND7 vs MYB83")
+b =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT5G12870)) + geom_line() + labs(title = "VND7 vs MYB46")
+c =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT5G67210)) + geom_line() + labs(title = "VND7 vs IRX15-L")
+d =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT4G18780)) + geom_line() + labs(title = "VND7 vs CESA8")
+e =ggplot(data=FFL_t, aes(y=AT1G71930,x=AT5G03260)) + geom_line() + labs(title = "VND7 vs LAC11")
+
+plot_grid(a, b, c, d,e, ncol = 3)
+
+
+### VND6 AND DOWNSTREAM TARGETS
+a =ggplot(data=FFL_t, aes(y=AT5G62380,x=AT3G08500)) + geom_line() + labs(title = "VND6 vs MYB83")
+b =ggplot(data=FFL_t, aes(y=AT5G62380,x=AT5G12870)) + geom_line() + labs(title = "VND6 vs MYB46")
+c =ggplot(data=FFL_t, aes(y=AT5G62380,x=AT5G67210)) + geom_line() + labs(title = "VND6 vs IRX15-L")
+d =ggplot(data=FFL_t, aes(y=AT5G62380,x=AT4G18780)) + geom_line() + labs(title = "VND6 vs CESA8")
+e =ggplot(data=FFL_t, aes(y=AT5G62380,x=AT5G03260)) + geom_line() + labs(title = "VND6 vs LAC11")
+
+plot_grid(a, b, c, d,e, ncol = 3)
+
+### MYB83 AND DOWNSTEAM TARGET
+a =ggplot(data=FFL_t, aes(y=AT3G08500,x=AT5G12870)) + geom_line() + labs(title = "MYB83 vs MYB46")
+b =ggplot(data=FFL_t, aes(y=AT3G08500,x=AT5G67210)) + geom_line() + labs(title = "MYB83 vs IRX15-L")
+c=ggplot(data=FFL_t, aes(y=AT3G08500,x=AT4G18780)) + geom_line() + labs(title = "MYB83 vs CESA8")
+d = ggplot(data=FFL_t, aes(y=AT3G08500,x=AT5G03260)) + geom_line() + labs(title = "MYB83 vs LAC11")
+
+plot_grid(a, b, c, d, ncol = 2)
+
+### MYB46 AND DOWNSTREAM TARGETS
+a= ggplot(data=FFL_t, aes(y=AT5G12870,x=AT3G08500)) + geom_line() + labs(title = "MYB46 vs MYB83")
+b= ggplot(data=FFL_t, aes(y=AT5G12870,x=AT5G67210)) + geom_line() + labs(title = "MYB83 vs IRX15-L")
+c= ggplot(data=FFL_t, aes(y=AT5G12870,x=AT4G18780)) + geom_line() + labs(title = "MYB83 vs CESA8")
+d= ggplot(data=FFL_t, aes(y=AT5G12870,x=AT5G03260)) + geom_line() + labs(title = "MYB83 vs LAC11")
+plot_grid(a, b, c, d, ncol = 2)
+
+
+### VND7 UPSTREAM TARGETS
+ggplot(data=FFL_t, aes(y=AT1G71930,x=AT5G62380)) + geom_line() + labs(title = "VND6 vs VND7")
+
+```
