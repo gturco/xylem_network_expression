@@ -1,0 +1,224 @@
+---
+title: "estradiol_vnd7_plots"
+output: html_document
+---
+
+## Raw Data 
+
+Log-log plots: ~100 seeds from the VND7 estradiol over expression line (Transplanta collection 2101677) were grown for  7 days and then  transferred by mesh filters to either MS or MS containing 20uM estradiol and grown for an additional 24 hrs. RNA extraction and cDNA synthesis was preformed. Each data point represents the log fold change of for independent treatments with 20 uM estradiol.  Fold change was calculated by qRT-PCR, all samples were normalized to actin.
+
+
+```{r}
+master <- read.csv("~/Documents/Data/qPCR_data/Whole Root VND7 OE - Rmaster.csv", header=TRUE)
+OE_LINE14_long = subset(master, Gene_name == "VND7")
+estradiol_concentration <- OE_LINE14_long$estrdiol_concentarion
+VND7_OE_line <- OE_LINE14_long$FC
+OE_LINE14 = data.frame(estradiol_concentration,VND7_OE_line)
+
+
+head(OE_LINE14)
+```
+
+
+How Simalar is this to Zuo paper for how line should act:
+
+```{r echo=FALSE, out.width='100%'}
+knitr::include_graphics('/Users/gturco/Documents/Projects/xylem_network_expression/src/Zou_2000.png')
+```
+
+###  **_only_** concentation logged
+
+
+```{r}
+library(ggplot2)
+ggplot(OE_LINE14,aes(estradiol_concentration,VND7_OE_line, group=estradiol_concentration)) + geom_boxplot() + scale_x_log10() + geom_point()
+
+```
+
+### Plot 2: RT-qPCR data ploted **_log-log_**
+
+```{r}
+
+ggplot(OE_LINE14,aes(estradiol_concentration,VND7_OE_line, group=estradiol_concentration)) + geom_boxplot() + scale_x_log10() + geom_point() + scale_y_log10()
+
+
+
+
+```
+
+
+## Conclusion 
+
+How Simalar is this to Zuo paper for how contructs should control transcription
+
+Also should see similar trend with XVE...
+
+```{r}
+
+master <- read.csv("~/Documents/Data/qPCR_data/Whole Root VND7 OE - Rmaster.csv", header=TRUE)
+m <- na.omit(master)
+
+ggplot(m[m$Gene_name == 'XVE',],aes(estrdiol_concentarion,FC, color= Gene_name, group=estrdiol_concentarion )) + geom_point() + geom_boxplot() + facet_wrap(~ Gene_name) + scale_x_log10() + scale_y_log10()
+```
+
+
+## downstream targets
+
+
+## non-logged plots
+```{r}
+ggplot(m,aes(VND7_FC,FC, color= Gene_name)) + geom_point() + geom_smooth(method = "lm", se = TRUE) + facet_wrap(~ Gene_name)
+```
+
+## log-log plots
+
+```{r}
+ggplot(m,aes(log2(VND7_FC), log2(FC), color= Gene_name)) + geom_point() + geom_smooth(method = "lm", se = TRUE) + facet_wrap(~ Gene_name)
+
+ggplot(m,aes(VND7_FC, FC, color= Gene_name, group=VND7_FC)) + geom_point() + geom_smooth(method = "lm", se = TRUE) + facet_wrap(~ Gene_name) + scale_y_log10() + scale_x_log10()
+```
+
+
+
+## testing for linearity or exponentail in VND7 data
+
+```{r}
+linear.model <- lm(formula = VND7_OE_line ~ estradiol_concentration)
+summary(linear.model)
+
+estradiol_concentration2 = estradiol_concentration^2
+quadratic.model <- lm(formula = VND7_OE_line ~ estradiol_concentration + estradiol_concentration2)
+summary(quadratic.model)
+
+expo.model <- lm(formula = log(VND7_OE_line) ~ estradiol_concentration)
+summary(expo.model)
+
+expo2.model <- lm(formula = VND7_OE_line ~ log(estradiol_concentration))
+summary(expo2.model)
+
+log.model <- lm(formula = log(VND7_OE_line) ~ log(estradiol_concentration))
+summary(log.model)
+```
+
+## log-log for lac11 format
+
+Decided to focus on lac11 since this gene seems to have the steepest slope
+
+$$ lac11 = a * VND7^{k} $$
+$$ a = intercept $$
+$$ k = slope $$
+
+a is the y value corresponding to x = 1
+can alpha be postive rather than neg?
+
+
+```{r}
+lac <- subset(m,Gene_name == "lac11")
+FC <- lac$FC
+VND7_FC <- lac$VND7_FC
+log.model <- summary(lm(formula = log(FC) ~ log(VND7_FC)))
+log.model$coefficients
+
+lac11 <- 0.86*(VND7_FC)^0.796377
+lac11.df.low <- 0.42*(VND7_FC)^0.721337
+lac11.df.high <-1.3*(VND7_FC)^0.871417
+
+df <- data.frame(cbind(VND7_FC,lac11,lac11.df.low,lac11.df.high))
+pl <- ggplot(df,aes(x=VND7_FC,y=lac11))
+pl <- pl + geom_line()
+pl
+pl <- pl + geom_ribbon(aes_string(ymin="lac11.df.low",ymax="lac11.df.high"),alpha=.1)
+pl <- pl + geom_point(data=lac,aes(y=FC)) 
+pl + ylab("LAC11")
+
+```
+
+
+
+muliple R squared value tells use amount of variance explaned by model.
+The log-log  model fits best the data explaining 70% of variance
+While the expo model explains the same amount of variance as the linear model.
+
+
+## testing for linearity or exponentail in VND7 data
+
+```{r}
+
+attach(m)
+
+r_squared_values <- function(dataset, gene){
+  new_dataset <- subset(dataset,Gene_name == gene)
+  FC <- new_dataset$FC
+  VND7_FC <- new_dataset$VND7_FC
+  
+  linear.model <- lm(formula = FC ~ VND7_FC)
+  linear.model.r <- summary(linear.model)$r.squared
+  
+  expo.y.model <- lm(formula = log(FC) ~ VND7_FC)
+  expo.y.model.r <- summary(expo.y.model)$r.squared
+  
+  expo.x.model <- lm(formula = FC ~ log(VND7_FC))
+  expo.x.model.r <- summary(expo.x.model)$r.squared
+  
+  log.model <- lm(formula = log(FC) ~ log(VND7_FC))
+  log.model.r <- summary(log.model)$r.squared
+  
+  x <- rbind(linear.model.r,expo.y.model.r,expo.x.model.r,log.model.r)
+  return(x)
+}
+  
+lacll <- r_squared_values(m,"lac11")
+irx15 <- r_squared_values(m,"irx15")
+cesa8 <- r_squared_values(m,"cesa8")
+cesa4 <- r_squared_values(m,"cesa4")
+myb46 <- r_squared_values(m,"myb46")
+myb83 <- r_squared_values(m,"myb83")
+
+
+r_squared_master <- cbind(lacll,irx15,cesa8,cesa4,myb46,myb83)
+colnames(r_squared_master) <- c("lacll","irx15","cesa8","cesa4","myb46","myb83")
+r_squared_master
+
+
+```
+
+best fit is log-log data what does this mean for model!
+I thinnk it means that the relationship
+
+### Is there an linear relationship.
+
+According to the correlations there is:
+
+
+```{r}
+
+
+cor(estradiol_concentration,VND7_OE_line)
+cor(log(estradiol_concentration),VND7_OE_line)
+cor(log(estradiol_concentration),log(VND7_OE_line))
+```
+
+The correlation gives you a bounded measurement that can be interpreted independently of the scale of the two variables. The closer the estimated correlation is to ±1, the closer the two are to a perfect linear relationship. The regression slope, in isolation, does not tell you that piece of information.
+
+## On Using Log-Scale
+
+#### I think we do because of this  [post](http://stats.stackexchange.com/questions/27951/when-are-log-scales-appropriate)
+
+
+A different reason for preferring a log scaling is in circumstances where the data are more naturally expressed geometrically. An example is when the **data represent concentration of a biological mediator. Concentrations cannot be negative and the variability almost invariably scales with the mean (i.e. there is heteroscedastic variance).** Using a logarithmic scale or, equivalently, using the log concentration as primary the measure both **fixes** the uneven variability and gives a scale that **is unbounded** on both ends. The concentrations are probably log-normally distributed and so a log scaling gives us a very convenient result that is arguably 'natural'. In pharmacology we use a logarithmic scale for drug concentrations far more often than not, and in many cases linear scales are only the product of non-pharmacologists dabbling with drugs ;-)
+
+Another good reason for a log scale, probably the one that you are interested in for time-series data, comes from the ability of a log scale to make fractional changes equivalent. Imagine a display of the long-term performance of your retirement investments. It (should) be **growing roughly exponentially because tomorrow's interest _depends_ on today's** investment (roughly speaking). Thus even if the performance in percentage terms has been fairly constant a graph of the funds will appear to have grown most rapidly at the right hand end. With a logarithmic scale a constant percentage change is seen as a constant vertical distance so a constant growth rate is seen as a straight line. That is often a substantial advantage.
+
+#### I am also unsure about using log scale because
+
+TODO MAKE SURE EACH HAS ITS OWN LINE
+
+Delta Delta CT  = 2^-(Change in Control to Treatment) 
+
+If I take the log of this:
+
+log2(Delta Delta CT) = Change in Control to Treatment
+
+This means we are no longer taking into account the the data is duplicating everytime and rather reverting to an older form of the data
+
+ 
