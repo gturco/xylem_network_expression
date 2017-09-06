@@ -1,0 +1,77 @@
+---
+title: "qpcr_plots"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+### Ploting qPCR data: 
+
+### Read in data from google docs
+
+```{r}
+
+feedback <- read.csv("/Users/gturco/Documents/Gina/Whole Root VND7 OE - RFeedback.csv",  header= TRUE)
+
+
+feedback
+```
+
+
+
+### Basic bar plot
+
+```{r}
+library("ggplot2")
+
+
+ggplot(feedback, aes(Gene_name,FC, fill= Gene_name)) + geom_bar(stat="identity") 
+
+
+VND7_primer <- subset(feedback, Target == "VND7")
+p1 <- ggplot(VND7_primer, aes(Gene_name,FC, fill= Gene_name)) + geom_bar(stat="identity") 
+p1
+
+```
+
+### Adding significance 
+
+```{r}
+library("ggsignif")
+ 
+p1 +   geom_signif(comparisons = list(c("MYB83", "VND7"),c("MYB46", "VND7")))
+
+
+p1 +   geom_signif(comparisons = list(c("MYB83", "VND7"),c("MYB46", "VND7")), 
+              map_signif_level=TRUE)
+
+
+```
+
+
+### Adding error bars
+
+```{r}
+#sem<-sd(x)/sqrt(length(x))
+v <- subset(VND7_primer, Gene_name == "VND7")
+sem <- sd(v$FC)/length(v$FC)
+sem
+```
+
+```{r}
+library("dplyr")
+data_summary <- feedback %>% # the names of the new data frame and the data frame to be summarised
+  group_by(Gene_name) %>%   # the grouping variable
+  summarise(mean_FC = mean(FC),  # calculates the mean of each group
+            sd_FC = sd(FC), # calculates the standard deviation of each group
+            n_FC = n(),  # calculates the sample size per group
+            SE_FC = sd(FC)/sqrt(n())) # calculates the standard error of each group
+
+data_summary
+```
+
+
+```{r}
+ggplot(data_summary, aes(Gene_name,mean_FC, fill= Gene_name)) + geom_bar(stat="identity")  + geom_errorbar(aes(ymin = mean_FC - sd_FC, ymax = mean_FC + sd_FC), width=0.2)
+```
+
